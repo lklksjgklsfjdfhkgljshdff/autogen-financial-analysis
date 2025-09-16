@@ -17,6 +17,7 @@ from .models import (
     validate_analysis_request
 )
 from .websocket import WebSocketManager
+from .task_manager import task_manager
 from ..main import AutoGenFinancialAnalysisSystem
 from ..monitoring.monitoring_system import SystemMonitor
 
@@ -28,6 +29,33 @@ system_monitor = None
 api_routes = APIRouter()
 
 
+async def run_analysis_task(task_id: str):
+    """Run analysis task in background"""
+    try:
+        result = await task_manager.execute_task(task_id)
+
+        # Broadcast result via WebSocket
+        if websocket_manager:
+            await websocket_manager.broadcast_task_update({
+                "task_id": task_id,
+                "status": "completed" if result.success else "failed",
+                "result": result.result if result.success else None,
+                "error": result.error if not result.success else None
+            })
+
+    except Exception as e:
+        logger = logging.getLogger(__name__)
+        logger.error(f"Background task {task_id} failed: {str(e)}")
+
+        # Update task status to failed
+        await task_manager.update_task_status(
+            task_id,
+            AnalysisStatus.FAILED,
+            None,
+            f"Task execution failed: {str(e)}"
+        )
+
+
 @api_routes.on_event("startup")
 async def startup_event():
     """启动事件"""
@@ -36,6 +64,9 @@ async def startup_event():
     # 初始化系统
     analysis_system = AutoGenFinancialAnalysisSystem()
     await analysis_system.initialize()
+
+    # 初始化任务管理器
+    await task_manager.initialize(analysis_system)
 
     # 初始化WebSocket管理器
     websocket_manager = WebSocketManager()

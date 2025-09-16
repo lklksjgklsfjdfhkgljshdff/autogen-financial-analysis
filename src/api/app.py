@@ -3,9 +3,10 @@ FastAPI Application for AutoGen Financial Analysis System
 Main application setup and configuration
 """
 
-from fastapi import FastAPI, HTTPException, Depends, BackgroundTasks
+from fastapi import FastAPI, HTTPException, Depends, BackgroundTasks, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, FileResponse
+from fastapi.staticfiles import StaticFiles
 from contextlib import asynccontextmanager
 import asyncio
 import logging
@@ -136,6 +137,26 @@ def create_app() -> FastAPI:
         allow_headers=["*"],
     )
 
+    # 静态文件服务
+    try:
+        app.mount("/static", StaticFiles(directory="web"), name="static")
+    except Exception as e:
+        logging.warning(f"Failed to mount static files: {e}")
+
+    # 根路径 - 返回web界面
+    @app.get("/")
+    async def root():
+        """根路径 - 返回web界面"""
+        try:
+            return FileResponse("web/index.html")
+        except Exception:
+            return JSONResponse({
+                "message": "AutoGen Financial Analysis API",
+                "version": "1.0.0",
+                "docs": "/docs",
+                "web_interface": "/static"
+            })
+
     # 错误处理
     @app.exception_handler(ValidationError)
     async def validation_error_handler(request, exc: ValidationError):
@@ -161,14 +182,19 @@ def create_app() -> FastAPI:
     # 包含路由
     app.include_router(api_routes, prefix="/api/v1")
 
-    # 根路径
-    @app.get("/")
-    async def root():
-        return {
-            "message": "AutoGen Financial Analysis API",
-            "version": "1.0.0",
-            "docs": "/docs"
-        }
+    # WebSocket端点
+    @app.websocket("/ws")
+    async def websocket_endpoint(websocket: WebSocket):
+        """WebSocket endpoint for real-time updates"""
+        from .routes import websocket_manager
+        await websocket_manager.connect(websocket)
+        try:
+            while True:
+                data = await websocket.receive_text()
+                # 处理WebSocket消息
+                await websocket_manager.handle_message(websocket, data)
+        except WebSocketDisconnect:
+            websocket_manager.disconnect(websocket)
 
     # 健康检查
     @app.get("/health")

@@ -12,7 +12,7 @@ from dataclasses import dataclass, field
 from .data_sources import DataSource, YahooFinanceSource, AlphaVantageSource, CompositeDataSource, DataSourceConfig
 from .data_models import FinancialData, MarketData, CollectionResult, DataQuality
 from .data_validator import DataValidator
-from ..cache import DataCacheManager
+from ..cache import CacheManager
 from ..config import ConfigurationManager
 
 
@@ -39,7 +39,7 @@ class CollectionRequest:
 class EnterpriseDataCollector:
     """Enterprise-grade financial data collector"""
 
-    def __init__(self, config_manager: ConfigurationManager, cache_manager: Optional[DataCacheManager] = None):
+    def __init__(self, config_manager: ConfigurationManager, cache_manager: Optional[CacheManager] = None):
         self.config_manager = config_manager
         self.cache_manager = cache_manager
         self.validator = DataValidator()

@@ -13,7 +13,7 @@ from datetime import datetime, timedelta
 from enum import Enum
 import logging
 import asyncio
-import aioredis
+import redis
 from functools import wraps
 from concurrent.futures import ThreadPoolExecutor
 
@@ -98,7 +98,7 @@ class CacheManager:
 
         # Initialize cache stores
         self.l1_cache: Dict[str, CacheEntry] = {}
-        self.redis_client: Optional[aioredis.Redis] = None
+        self.redis_client: Optional[redis.Redis] = None
         self.thread_pool = ThreadPoolExecutor(max_workers=max_workers)
 
         # Initialize statistics
@@ -113,7 +113,7 @@ class CacheManager:
         """Initialize cache manager and Redis connection"""
         try:
             # Initialize Redis connection
-            self.redis_client = aioredis.from_url(
+            self.redis_client = redis.from_url(
                 self.redis_url,
                 encoding="utf-8",
                 decode_responses=False,

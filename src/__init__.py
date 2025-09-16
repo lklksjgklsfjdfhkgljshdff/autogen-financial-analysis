@@ -12,7 +12,7 @@ from .data import EnterpriseDataCollector
 from .analysis import AdvancedFinancialAnalyzer
 from .risk import AdvancedRiskAnalyzer
 from .quant import QuantitativeAnalyzer
-from .cache import DataCacheManager
+from .cache import CacheManager
 from .monitoring import SystemMonitor
 from .security import SecurityManager
 from .config import ConfigurationManager
@@ -24,7 +24,7 @@ __all__ = [
     "AdvancedFinancialAnalyzer",
     "AdvancedRiskAnalyzer",
     "QuantitativeAnalyzer",
-    "DataCacheManager",
+    "CacheManager",
     "SystemMonitor",
     "SecurityManager",
     "ConfigurationManager"
