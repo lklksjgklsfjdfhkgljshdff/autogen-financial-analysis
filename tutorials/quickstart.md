@@ -98,6 +98,66 @@ python -m src.main portfolio AAPL MSFT GOOG
 python -m src.main portfolio AAPL MSFT GOOG --weights AAPL=0.5,MSFT=0.3,GOOG=0.2
 ```
 
+### 3.5 量化分析
+
+系统提供强大的量化分析功能：
+
+```bash
+# 对单个股票进行量化分析
+python -m src.main quant AAPL
+
+# 使用特定因子进行分析
+python -m src.main quant AAPL --factors momentum value growth
+
+# 使用特定因子模型
+python -m src.main quant AAPL --method carhart
+
+# 导出量化分析报告
+python -m src.main quant AAPL --export html,pdf,json
+```
+
+### 3.6 策略回测
+
+您可以对量化策略进行历史回测：
+
+```bash
+# 运行动量策略回测
+python -m src.main backtest --strategy momentum --start-date 2020-01-01 --end-date 2023-01-01
+
+# 设置回测参数
+python -m src.main backtest --strategy momentum --start-date 2020-01-01 --end-date 2023-01-01 --initial-capital 100000 --commission 0.001
+
+# 导出回测报告
+python -m src.main backtest --strategy momentum --start-date 2020-01-01 --end-date 2023-01-01 --export html,pdf
+```
+
+### 3.7 策略优化
+
+优化量化策略参数：
+
+```bash
+# 优化策略参数
+python -m src.main optimize --strategy momentum --param window=5,10,15,20
+
+# 设置优化时间范围
+python -m src.main optimize --strategy momentum --param window=5,10,15,20 --start-date 2020-01-01 --end-date 2023-01-01
+```
+
+### 3.8 投资组合优化
+
+优化投资组合权重：
+
+```bash
+# 使用均值-方差优化方法
+python -m src.main optimize-portfolio --symbols AAPL MSFT GOOG --method mean_variance
+
+# 使用风险平价优化方法
+python -m src.main optimize-portfolio --symbols AAPL MSFT GOOG --method risk_parity
+
+# 设置风险厌恶系数
+python -m src.main optimize-portfolio --symbols AAPL MSFT GOOG --method mean_variance --risk-aversion 1.5
+```
+
 ## 4. 快速开始：Web界面方式
 
 ### 4.1 启动Web服务
@@ -141,6 +201,30 @@ INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
 4. 选择分析类型
 5. 选择要导出的报告格式（可选）
 6. 点击"开始分析"按钮
+
+### 4.3.3 量化分析
+
+1. 在左侧导航栏中，点击"分析模块" -> "量化分析"
+2. 输入股票代码或选择投资组合
+3. 选择分析因子和模型方法
+4. 选择要导出的报告格式（可选）
+5. 点击"开始分析"按钮
+
+### 4.3.4 策略回测
+
+1. 在左侧导航栏中，点击"分析模块" -> "策略回测"
+2. 选择策略类型和回测参数
+3. 设置回测时间范围和初始资金
+4. 选择要导出的报告格式（可选）
+5. 点击"开始回测"按钮
+
+### 4.3.5 投资组合优化
+
+1. 在左侧导航栏中，点击"分析模块" -> "投资组合优化"
+2. 添加股票代码
+3. 选择优化方法和参数
+4. 选择要导出的报告格式（可选）
+5. 点击"开始优化"按钮
 
 ## 5. 查看分析报告
 
@@ -222,11 +306,43 @@ python -m src.main portfolio AAPL MSFT GOOG --weights AAPL=0.5,MSFT=0.3,GOOG=0.2
 - **风险贡献分析**: 各资产对组合风险的贡献度
 - **优化建议**: 基于分析结果的投资组合优化建议
 
-## 8. 使用API接口
+## 8. 示例：量化分析
+
+接下来，让我们对苹果公司（AAPL）进行量化分析。
+
+### 8.1 命令行分析
+
+运行以下命令开始分析：
+
+```bash
+python -m src.main quant AAPL --factors momentum value growth --method fama_french --export html,pdf
+```
+
+### 8.2 量化分析结果解读
+
+分析完成后，您将看到类似以下输出：
+
+```
+量化分析完成: AAPL
+预期收益率: 15.2%
+投资组合风险: 18.5%
+夏普比率: 0.82
+```
+
+### 8.3 详细报告查看
+
+打开`output/`目录下的HTML或PDF报告，您将看到详细的量化分析结果，包括：
+
+- **因子分析**: 各量化因子的暴露和显著性
+- **投资组合优化**: 最优权重配置和风险调整收益
+- **回测结果**: 策略历史表现和绩效指标
+- **风险分析**: 各种风险度量和压力测试结果
+
+## 9. 使用API接口
 
 如果您希望将系统集成到其他应用程序中，可以使用系统提供的RESTful API接口。
 
-### 8.1 创建分析任务
+### 9.1 创建分析任务
 
 ```bash
 curl -X POST "http://localhost:8000/api/v1/analysis" \
@@ -238,16 +354,16 @@ curl -X POST "http://localhost:8000/api/v1/analysis" \
   }'
 ```
 
-### 8.2 查看任务状态
+### 9.2 查看任务状态
 
 ```bash
 # 替换{task_id}为实际的任务ID
 curl -X GET "http://localhost:8000/api/v1/analysis/{task_id}"
 ```
 
-## 9. 常见问题解决
+## 10. 常见问题解决
 
-### 9.1 数据源连接问题
+### 10.1 数据源连接问题
 
 如果您遇到数据源连接问题，请检查：
 
@@ -255,7 +371,7 @@ curl -X GET "http://localhost:8000/api/v1/analysis/{task_id}"
 - `.env`文件中的API密钥是否正确
 - 您的API密钥是否有足够的配额
 
-### 9.2 分析结果不准确
+### 10.2 分析结果不准确
 
 如果您认为分析结果不准确，请考虑：
 
@@ -263,7 +379,7 @@ curl -X GET "http://localhost:8000/api/v1/analysis/{task_id}"
 - 检查您输入的股票代码是否正确
 - 注意系统提示的任何数据质量问题
 
-### 9.3 系统性能问题
+### 10.3 系统性能问题
 
 如果系统运行缓慢，您可以：
 
@@ -271,7 +387,7 @@ curl -X GET "http://localhost:8000/api/v1/analysis/{task_id}"
 - 对于大型投资组合，减少分析的股票数量
 - 对于开发环境，关闭不必要的监控功能
 
-## 10. 下一步学习
+## 11. 下一步学习
 
 完成本快速入门教程后，您可以继续学习以下内容：
 

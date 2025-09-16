@@ -5,10 +5,10 @@
 ## 🚀 功能特性
 
 ### 🔍 核心功能
-- **多源数据收集**: 整合Yahoo Finance、Alpha Vantage、Quandl等多个金融数据源
+- **多源数据收集**: 整合Yahoo Finance、Alpha Vantage等多个金融数据源
 - **智能财务分析**: 基于AutoGen的多Agent协作分析
 - **风险评估**: VaR计算、压力测试、蒙特卡洛模拟
-- **量化分析**: 因子模型、投资组合优化、机器学习预测
+- **量化分析**: 因子模型、投资组合优化、策略回测、机器学习预测
 - **实时监控**: 系统性能监控和告警
 - **数据可视化**: 交互式图表和报告生成
 
@@ -90,13 +90,58 @@ python -m src.main interactive
 python -m src.main analyze AAPL --type comprehensive
 
 # 导出报告
-python -m src.main analyze AAPL --export html,pdf
-
-# 使用缓存
-python -m src.main analyze AAPL --use-cache
+python -m src.main analyze AAPL --format html,pdf
 
 # 自定义配置
 python -m src.main analyze AAPL --config custom_config.yaml
+```
+
+#### 量化分析选项
+```bash
+# 对单个股票进行量化分析
+python -m src.main quant AAPL
+
+# 使用特定因子进行分析
+python -m src.main quant AAPL --factors momentum value growth
+
+# 使用特定因子模型
+python -m src.main quant AAPL --method carhart
+
+# 导出量化分析报告
+python -m src.main quant AAPL --format html,pdf,json
+```
+
+#### 策略回测选项
+```bash
+# 运行动量策略回测
+python -m src.main backtest --strategy momentum --start-date 2020-01-01 --end-date 2023-01-01
+
+# 设置回测参数
+python -m src.main backtest --strategy momentum --start-date 2020-01-01 --end-date 2023-01-01 --initial-capital 100000 --commission 0.001
+
+# 导出回测报告
+python -m src.main backtest --strategy momentum --start-date 2020-01-01 --end-date 2023-01-01 --format html,pdf
+```
+
+#### 策略优化选项
+```bash
+# 优化策略参数
+python -m src.main optimize --strategy momentum --param window=5,10,15,20
+
+# 设置优化时间范围
+python -m src.main optimize --strategy momentum --param window=5,10,15,20 --start-date 2020-01-01 --end-date 2023-01-01
+```
+
+#### 投资组合优化选项
+```bash
+# 使用均值-方差优化方法
+python -m src.main optimize-portfolio --symbols AAPL MSFT GOOG --method mean_variance
+
+# 使用风险平价优化方法
+python -m src.main optimize-portfolio --symbols AAPL MSFT GOOG --method risk_parity
+
+# 设置风险厌恶系数
+python -m src.main optimize-portfolio --symbols AAPL MSFT GOOG --method mean_variance --risk-aversion 1.5
 ```
 
 ### Web界面
@@ -151,7 +196,14 @@ ws.onmessage = function(event) {
 - **操作风险**: 历史模拟、蒙特卡洛模拟
 - **压力测试**: 极端市场情景分析
 
-### 投资组合分析
+### 量化分析报告
+- **因子分析**: 多因子暴露、因子收益率、信息系数
+- **投资组合优化**: 有效前沿、风险平价、最大分散化
+- **策略回测**: 累计收益、最大回撤、夏普比率
+- **风险贡献分析**: 各资产对组合风险的贡献度
+- **绩效归因**: 收益来源分解
+
+### 投资组合分析报告
 - **有效前沿**: 风险收益最优化组合
 - **夏普比率**: 风险调整后收益
 - **最大回撤**: 历史最大损失
@@ -185,7 +237,6 @@ data_sources:
 # API密钥
 YAHOO_FINANCE_API_KEY=your_key_here
 ALPHA_VANTAGE_API_KEY=your_key_here
-QUANDL_API_KEY=your_key_here
 
 # 数据库配置
 DATABASE_URL=postgresql://user:password@localhost:5432/autogen_financial

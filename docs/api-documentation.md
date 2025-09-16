@@ -20,7 +20,7 @@ http://localhost:8000/api/v1/
 
 系统API使用JWT（JSON Web Token）进行身份认证：
 
-1. 获取令牌：通过`/auth/token`端点获取JWT令牌
+1. 获取令牌：通过`/auth/login`端点获取JWT令牌
 2. 在后续请求的Authorization头中包含令牌：`Bearer {token}`
 
 ### 2.4 响应格式
@@ -49,9 +49,9 @@ http://localhost:8000/api/v1/
 
 ## 3. 认证API
 
-### 3.1 获取认证令牌
+### 3.1 用户登录
 
-**请求**: POST /auth/token
+**请求**: POST /auth/login
 
 **请求参数**: 
 
@@ -78,7 +78,7 @@ http://localhost:8000/api/v1/
 **示例**: 
 
 ```bash
-curl -X POST "http://localhost:8000/api/v1/auth/token" \
+curl -X POST "http://localhost:8000/api/v1/auth/login" \
   -H "Content-Type: application/json" \
   -d '{"username": "admin", "password": "password"}'
 ```
@@ -148,12 +148,15 @@ curl -X GET "http://localhost:8000/api/v1/auth/verify" \
 ```json
 {
   "symbols": ["string"],  // 股票代码列表
-  "analysis_type": "quick" | "comprehensive" | "detailed",  // 分析类型
-  "export_formats": ["html" | "pdf" | "json" | "csv"],  // 导出格式
+  "analysis_type": "quick" | "comprehensive" | "detailed" | "portfolio" | "risk" | "financial",  // 分析类型
+  "export_formats": ["html" | "pdf" | "json" | "csv" | "excel" | "markdown" | "xml"],  // 导出格式
   "portfolio_weights": {  // 投资组合权重（可选，仅对多个股票有效）
     "AAPL": 0.5,
     "MSFT": 0.3,
     "GOOG": 0.2
+  },
+  "options": {  // 其他选项
+    "use_cache": true
   }
 }
 ```
@@ -164,10 +167,9 @@ curl -X GET "http://localhost:8000/api/v1/auth/verify" \
 {
   "status": "success",
   "data": {
-    "task_id": "string",
+    "request_id": "string",
     "status": "pending",
-    "created_at": "2023-12-01T12:00:00Z",
-    "estimated_completion": "2023-12-01T12:05:00Z"
+    "message": "分析任务已创建"
   }
 }
 ```
@@ -200,21 +202,17 @@ curl -X POST "http://localhost:8000/api/v1/analysis" \
 {
   "status": "success",
   "data": {
-    "task_id": "string",
-    "status": "pending" | "processing" | "completed" | "failed",
-    "created_at": "2023-12-01T12:00:00Z",
-    "updated_at": "2023-12-01T12:03:00Z",
+    "request": {
+      "id": "string",
+      "symbols": ["AAPL", "MSFT"],
+      "analysis_type": "comprehensive",
+      "export_formats": ["html", "pdf"],
+      "created_at": "2023-12-01T12:00:00Z"
+    },
+    "status": "pending" | "running" | "completed" | "failed" | "cancelled",
     "progress": 60,  // 进度百分比
-    "error_message": "string",  // 仅在状态为failed时存在
-    "results": {  // 仅在状态为completed时存在
-      "summary": {},
-      "financial_metrics": {},
-      "risk_metrics": {},
-      "reports": [
-        {"format": "html", "url": "http://localhost:8000/reports/xxx.html"},
-        {"format": "pdf", "url": "http://localhost:8000/reports/xxx.pdf"}
-      ]
-    }
+    "export_files": ["filename1.html", "filename2.pdf"],
+    "created_at": "2023-12-01T12:00:00Z"
   }
 }
 ```
@@ -228,15 +226,12 @@ curl -X GET "http://localhost:8000/api/v1/analysis/{task_id}" \
 
 ### 4.3 获取分析结果
 
-**请求**: GET /analysis/{task_id}/results
+**请求**: GET /analysis/{task_id}/result
 
 **请求头**: Authorization: Bearer {token}
 
 **路径参数**: 
 - `task_id`: 任务ID
-
-**查询参数**: 
-- `format`: 结果格式，可选值：`json`（默认）、`csv`
 
 **响应**: 
 
@@ -244,28 +239,35 @@ curl -X GET "http://localhost:8000/api/v1/analysis/{task_id}" \
 {
   "status": "success",
   "data": {
-    "summary": {
-      "score": 85,
-      "rating": "买入",
-      "overview": "..."
+    "request_id": "string",
+    "results": {
+      "symbol": "AAPL",
+      "financial_metrics": {
+        "roe": 20.5,
+        "roa": 10.2,
+        "profit_margin": 15.8,
+        "debt_ratio": 45.3
+      },
+      "risk_metrics": {
+        "volatility": 22.5,
+        "beta": 1.15,
+        "var_95": 3.2
+      },
+      "summary": {
+        "score": 85,
+        "rating": "买入",
+        "overview": "..."
+      },
+      "recommendations": [
+        "盈利能力优秀，具备长期投资价值",
+        "负债率适中，关注偿债能力"
+      ],
+      "data_quality": {
+        "overall_score": 0.95
+      },
+      "analysis_date": "2023-12-01T12:00:00Z"
     },
-    "financial_metrics": {
-      "roe": 20.5,
-      "roa": 10.2,
-      "profit_margin": 15.8,
-      "debt_ratio": 45.3,
-      // 更多财务指标
-    },
-    "risk_metrics": {
-      "volatility": 22.5,
-      "beta": 1.15,
-      "var_95": 3.2,
-      // 更多风险指标
-    },
-    "recommendations": [
-      {"type": "投资建议", "content": "..."},
-      {"type": "风险提示", "content": "..."}
-    ]
+    "export_files": ["AAPL_analysis_20231201_120000.html", "AAPL_analysis_20231201_120000.pdf"]
   }
 }
 ```
@@ -273,7 +275,7 @@ curl -X GET "http://localhost:8000/api/v1/analysis/{task_id}" \
 **示例**: 
 
 ```bash
-curl -X GET "http://localhost:8000/api/v1/analysis/{task_id}/results" \
+curl -X GET "http://localhost:8000/api/v1/analysis/{task_id}/result" \
   -H "Authorization: Bearer {token}"
 ```
 
@@ -292,9 +294,7 @@ curl -X GET "http://localhost:8000/api/v1/analysis/{task_id}/results" \
 {
   "status": "success",
   "data": {
-    "task_id": "string",
-    "status": "cancelled",
-    "cancelled_at": "2023-12-01T12:02:00Z"
+    "message": "任务已取消"
   }
 }
 ```
@@ -306,181 +306,15 @@ curl -X DELETE "http://localhost:8000/api/v1/analysis/{task_id}" \
   -H "Authorization: Bearer {token}"
 ```
 
-## 5. 数据API
+### 4.5 获取分析任务列表
 
-### 5.1 获取股票基本信息
-
-**请求**: GET /data/stocks/{symbol}
-
-**请求头**: Authorization: Bearer {token}
-
-**路径参数**: 
-- `symbol`: 股票代码
-
-**响应**: 
-
-```json
-{
-  "status": "success",
-  "data": {
-    "symbol": "AAPL",
-    "name": "Apple Inc.",
-    "exchange": "NASDAQ",
-    "sector": "Technology",
-    "industry": "Consumer Electronics",
-    "country": "United States",
-    "market_cap": 2.8e12,
-    "currency": "USD",
-    "updated_at": "2023-12-01T12:00:00Z"
-  }
-}
-```
-
-**示例**: 
-
-```bash
-curl -X GET "http://localhost:8000/api/v1/data/stocks/AAPL" \
-  -H "Authorization: Bearer {token}"
-```
-
-### 5.2 获取历史价格数据
-
-**请求**: GET /data/stocks/{symbol}/prices
-
-**请求头**: Authorization: Bearer {token}
-
-**路径参数**: 
-- `symbol`: 股票代码
-
-**查询参数**: 
-- `start_date`: 开始日期，格式：YYYY-MM-DD
-- `end_date`: 结束日期，格式：YYYY-MM-DD
-- `interval`: 时间间隔，可选值：`1d`（默认）、`1wk`、`1mo`
-
-**响应**: 
-
-```json
-{
-  "status": "success",
-  "data": {
-    "symbol": "AAPL",
-    "interval": "1d",
-    "prices": [
-      {"date": "2023-12-01", "open": 188.0, "high": 190.5, "low": 187.2, "close": 189.8, "volume": 45000000},
-      {"date": "2023-11-30", "open": 186.5, "high": 188.2, "low": 186.1, "close": 187.9, "volume": 38000000},
-      // 更多价格数据
-    ],
-    "updated_at": "2023-12-01T12:00:00Z"
-  }
-}
-```
-
-**示例**: 
-
-```bash
-curl -X GET "http://localhost:8000/api/v1/data/stocks/AAPL/prices?start_date=2023-01-01&end_date=2023-12-01" \
-  -H "Authorization: Bearer {token}"
-```
-
-### 5.3 获取财务报表数据
-
-**请求**: GET /data/stocks/{symbol}/financials
-
-**请求头**: Authorization: Bearer {token}
-
-**路径参数**: 
-- `symbol`: 股票代码
-
-**查询参数**: 
-- `report_type`: 报表类型，可选值：`income`（利润表，默认）、`balance`（资产负债表）、`cash_flow`（现金流量表）
-- `period`: 报告周期，可选值：`annual`（年报，默认）、`quarterly`（季报）
-
-**响应**: 
-
-```json
-{
-  "status": "success",
-  "data": {
-    "symbol": "AAPL",
-    "report_type": "income",
-    "period": "annual",
-    "reports": [
-      {
-        "fiscal_year": 2023,
-        "fiscal_quarter": null,
-        "revenue": 383.285e9,
-        "net_income": 94.8 billion,
-        "eps": 6.13,
-        // 更多财务数据
-      },
-      // 更多报告
-    ],
-    "updated_at": "2023-12-01T12:00:00Z"
-  }
-}
-```
-
-**示例**: 
-
-```bash
-curl -X GET "http://localhost:8000/api/v1/data/stocks/AAPL/financials?report_type=balance&period=quarterly" \
-  -H "Authorization: Bearer {token}"
-```
-
-### 5.4 获取市场指标数据
-
-**请求**: GET /data/market/indices
+**请求**: GET /analysis
 
 **请求头**: Authorization: Bearer {token}
 
 **查询参数**: 
-- `indices`: 指数代码列表，例如：`^GSPC,^DJI,^IXIC`
-- `start_date`: 开始日期，格式：YYYY-MM-DD
-- `end_date`: 结束日期，格式：YYYY-MM-DD
-
-**响应**: 
-
-```json
-{
-  "status": "success",
-  "data": {
-    "indices": [
-      {
-        "symbol": "^GSPC",
-        "name": "S&P 500",
-        "prices": [
-          {"date": "2023-12-01", "close": 4567.89},
-          // 更多价格数据
-        ]
-      },
-      // 更多指数
-    ],
-    "updated_at": "2023-12-01T12:00:00Z"
-  }
-}
-```
-
-**示例**: 
-
-```bash
-curl -X GET "http://localhost:8000/api/v1/data/market/indices?indices=^GSPC,^DJI" \
-  -H "Authorization: Bearer {token}"
-```
-
-## 6. 报告API
-
-### 6.1 获取报告列表
-
-**请求**: GET /reports
-
-**请求头**: Authorization: Bearer {token}
-
-**查询参数**: 
-- `symbol`: 股票代码（可选，用于过滤）
-- `type`: 报告类型（可选，例如：`financial`, `risk`, `portfolio`）
-- `start_date`: 开始日期，格式：YYYY-MM-DD
-- `end_date`: 结束日期，格式：YYYY-MM-DD
-- `limit`: 返回的最大数量（默认：10）
+- `status`: 任务状态（可选）
+- `limit`: 返回的最大数量（默认：50）
 - `offset`: 偏移量（默认：0）
 
 **响应**: 
@@ -488,105 +322,33 @@ curl -X GET "http://localhost:8000/api/v1/data/market/indices?indices=^GSPC,^DJI
 ```json
 {
   "status": "success",
-  "data": {
-    "reports": [
-      {
+  "data": [
+    {
+      "request": {
         "id": "string",
-        "symbol": "AAPL",
-        "type": "financial",
+        "symbols": ["AAPL"],
         "analysis_type": "comprehensive",
-        "created_at": "2023-12-01T12:00:00Z",
-        "formats": ["html", "pdf"],
-        "url": "http://localhost:8000/reports/xxx.html"
+        "created_at": "2023-12-01T12:00:00Z"
       },
-      // 更多报告
-    ],
-    "total": 42,
-    "limit": 10,
-    "offset": 0
-  }
+      "status": "completed",
+      "progress": 100,
+      "export_files": ["AAPL_analysis_20231201_120000.html"],
+      "created_at": "2023-12-01T12:00:00Z"
+    }
+  ]
 }
 ```
 
 **示例**: 
 
 ```bash
-curl -X GET "http://localhost:8000/api/v1/reports?symbol=AAPL&limit=20" \
+curl -X GET "http://localhost:8000/api/v1/analysis?status=completed&limit=10" \
   -H "Authorization: Bearer {token}"
 ```
 
-### 6.2 获取报告详情
+## 5. 系统管理API
 
-**请求**: GET /reports/{report_id}
-
-**请求头**: Authorization: Bearer {token}
-
-**路径参数**: 
-- `report_id`: 报告ID
-
-**响应**: 
-
-```json
-{
-  "status": "success",
-  "data": {
-    "id": "string",
-    "symbol": "AAPL",
-    "type": "financial",
-    "analysis_type": "comprehensive",
-    "created_at": "2023-12-01T12:00:00Z",
-    "summary": {
-      "score": 85,
-      "rating": "买入",
-      "overview": "..."
-    },
-    "formats": [
-      {"type": "html", "url": "http://localhost:8000/reports/xxx.html"},
-      {"type": "pdf", "url": "http://localhost:8000/reports/xxx.pdf"},
-      {"type": "json", "url": "http://localhost:8000/reports/xxx.json"}
-    ]
-  }
-}
-```
-
-**示例**: 
-
-```bash
-curl -X GET "http://localhost:8000/api/v1/reports/{report_id}" \
-  -H "Authorization: Bearer {token}"
-```
-
-### 6.3 删除报告
-
-**请求**: DELETE /reports/{report_id}
-
-**请求头**: Authorization: Bearer {token}
-
-**路径参数**: 
-- `report_id`: 报告ID
-
-**响应**: 
-
-```json
-{
-  "status": "success",
-  "data": {
-    "id": "string",
-    "deleted": true
-  }
-}
-```
-
-**示例**: 
-
-```bash
-curl -X DELETE "http://localhost:8000/api/v1/reports/{report_id}" \
-  -H "Authorization: Bearer {token}"
-```
-
-## 7. 系统管理API
-
-### 7.1 获取系统状态
+### 5.1 获取系统状态
 
 **请求**: GET /system/status
 
@@ -598,21 +360,17 @@ curl -X DELETE "http://localhost:8000/api/v1/reports/{report_id}" \
 {
   "status": "success",
   "data": {
-    "version": "1.0.0",
-    "status": "running",
-    "uptime": "2 days, 4 hours, 30 minutes",
-    "memory_usage": "780MB / 16GB",
-    "cpu_usage": "15%",
+    "status": "healthy",
+    "uptime": 86400,
     "active_tasks": 5,
-    "database": {
-      "status": "connected",
-      "connections": 12
+    "completed_tasks": 100,
+    "failed_tasks": 2,
+    "system_resources": {
+      "cpu_usage": 15.5,
+      "memory_usage": 780,
+      "memory_total": 16384
     },
-    "redis": {
-      "status": "connected",
-      "memory_usage": "240MB",
-      "hit_rate": "92%"
-    }
+    "api_version": "1.0.0"
   }
 }
 ```
@@ -624,9 +382,9 @@ curl -X GET "http://localhost:8000/api/v1/system/status" \
   -H "Authorization: Bearer {token}"
 ```
 
-### 7.2 获取系统配置
+### 5.2 获取系统指标
 
-**请求**: GET /system/config
+**请求**: GET /system/metrics
 
 **请求头**: Authorization: Bearer {token}
 
@@ -636,29 +394,11 @@ curl -X GET "http://localhost:8000/api/v1/system/status" \
 {
   "status": "success",
   "data": {
-    "autogen": {
-      "gpt_model": "gpt-4",
-      "temperature": 0.7,
-      "max_tokens": 4000
-    },
-    "data_sources": {
-      "yahoo_finance": {
-        "timeout": 30,
-        "retry_count": 3
-      },
-      "alpha_vantage": {
-        "api_key": "******",
-        "calls_per_minute": 5
-      }
-    },
-    "cache": {
-      "enabled": true,
-      "ttl": 3600
-    },
-    "security": {
-      "jwt_expiration": 3600,
-      "rate_limit": "100/hour"
-    }
+    "cpu_usage": 15.5,
+    "memory_usage": 780,
+    "disk_usage": 12000,
+    "network_in": 1000,
+    "network_out": 2000
   }
 }
 ```
@@ -666,97 +406,49 @@ curl -X GET "http://localhost:8000/api/v1/system/status" \
 **示例**: 
 
 ```bash
-curl -X GET "http://localhost:8000/api/v1/system/config" \
+curl -X GET "http://localhost:8000/api/v1/system/metrics" \
   -H "Authorization: Bearer {token}"
 ```
 
-### 7.3 更新系统配置
-
-**请求**: PUT /system/config
-
-**请求头**: Authorization: Bearer {token}
-
-**请求参数**: 
-
-```json
-{
-  "section": "string",  // 配置部分，例如："autogen", "data_sources", "cache"
-  "config": {
-    // 要更新的配置项
-  }
-}
-```
-
-**响应**: 
-
-```json
-{
-  "status": "success",
-  "data": {
-    "updated": true,
-    "restart_required": false
-  }
-}
-```
-
-**示例**: 
-
-```bash
-curl -X PUT "http://localhost:8000/api/v1/system/config" \
-  -H "Authorization: Bearer {token}" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "section": "cache",
-    "config": {
-      "enabled": true,
-      "ttl": 7200
-    }
-  }'
-```
-
-## 8. WebSocket API
+## 6. WebSocket API
 
 系统还提供了WebSocket API，用于获取实时更新和推送通知。
 
-### 8.1 连接WebSocket
+### 6.1 连接WebSocket
 
 **URL**: `ws://localhost:8000/ws`
 
 **认证**: 连接时需要提供JWT令牌作为查询参数：`ws://localhost:8000/ws?token={token}`
 
-### 8.2 接收任务更新
+### 6.2 订阅任务更新
 
-连接建立后，客户端会收到分析任务的实时更新：
+连接建立后，客户端可以订阅任务状态更新：
+
+```json
+{
+  "type": "subscribe",
+  "task_id": "string"
+}
+```
+
+### 6.3 接收任务更新
+
+客户端会收到分析任务的实时更新：
 
 ```json
 {
   "type": "task_update",
+  "task_id": "string",
   "data": {
-    "task_id": "string",
-    "status": "processing",
+    "status": "running",
     "progress": 60,
-    "message": "正在进行风险评估..."
-  }
+    "step": "数据收集"
+  },
+  "timestamp": "2023-12-01T12:05:00Z"
 }
 ```
 
-### 8.3 接收系统通知
-
-客户端还会收到系统级别的通知：
-
-```json
-{
-  "type": "system_notification",
-  "data": {
-    "level": "info" | "warning" | "error",
-    "title": "数据源连接恢复",
-    "message": "Yahoo Finance数据源连接已恢复正常",
-    "timestamp": "2023-12-01T12:05:00Z"
-  }
-}
-```
-
-### 8.4 JavaScript示例
+### 6.4 JavaScript示例
 
 ```javascript
 const token = "your_jwt_token";
@@ -764,6 +456,11 @@ const ws = new WebSocket(`ws://localhost:8000/ws?token=${token}`);
 
 ws.onopen = function(event) {
   console.log('WebSocket连接已建立');
+  // 订阅任务更新
+  ws.send(JSON.stringify({
+    "type": "subscribe",
+    "task_id": "your_task_id"
+  }));
 };
 
 ws.onmessage = function(event) {
@@ -772,9 +469,6 @@ ws.onmessage = function(event) {
   if (data.type === 'task_update') {
     console.log('任务更新:', data.data);
     // 处理任务更新
-  } else if (data.type === 'system_notification') {
-    console.log('系统通知:', data.data);
-    // 处理系统通知
   }
 };
 
@@ -787,9 +481,9 @@ ws.onclose = function(event) {
 };
 ```
 
-## 9. API使用最佳实践
+## 7. API使用最佳实践
 
-### 9.1 认证与安全
+### 7.1 认证与安全
 
 - 始终使用HTTPS协议（生产环境）
 - 妥善保管JWT令牌，不要在客户端代码中硬编码
@@ -797,7 +491,7 @@ ws.onclose = function(event) {
 - 定期刷新令牌
 - 实施适当的访问控制和权限检查
 
-### 9.2 性能优化
+### 7.2 性能优化
 
 - 使用批量操作减少API调用次数
 - 利用缓存减少重复请求
@@ -805,7 +499,7 @@ ws.onclose = function(event) {
 - 实现重试机制处理临时错误
 - 监控API响应时间并进行优化
 
-### 9.3 错误处理
+### 7.3 错误处理
 
 - 检查并处理所有API错误响应
 - 实现适当的重试逻辑
@@ -813,14 +507,14 @@ ws.onclose = function(event) {
 - 向用户提供友好的错误信息
 - 区分临时错误和永久错误
 
-### 9.4 分页与过滤
+### 7.4 分页与过滤
 
 - 对大型数据集使用分页
 - 使用过滤参数减少数据传输量
 - 按需求选择适当的数据字段
 - 实现增量同步机制减少数据传输
 
-## 10. 常见问题
+## 8. 常见问题
 
 **Q: 如何处理API速率限制？**
 A: 系统实现了速率限制机制，建议在应用中实现重试逻辑，并尊重API的速率限制。
@@ -837,14 +531,12 @@ A: 可以使用Postman、curl等工具测试API请求，检查请求参数和响
 **Q: API版本更新会影响现有应用吗？**
 A: 我们会尽力保持API的向后兼容性，但建议在新版本发布后及时测试和更新您的应用。
 
-## 11. API变更日志
+## 9. API变更日志
 
 ### v1.0.0 (2023-12-01)
 - 初始版本发布
 - 实现认证API
 - 实现分析API
-- 实现数据API
-- 实现报告API
 - 实现系统管理API
 - 实现WebSocket API
 

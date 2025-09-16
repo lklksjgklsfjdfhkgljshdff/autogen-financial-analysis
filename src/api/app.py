@@ -21,6 +21,7 @@ from .models import (
     validate_analysis_request, ValidationError
 )
 from .routes import api_routes
+from .auth_routes import auth_routes
 from .websocket import WebSocketManager
 from ..config.config_manager import ConfigurationManager
 from ..monitoring.monitoring_system import SystemMonitor
@@ -181,6 +182,7 @@ def create_app() -> FastAPI:
 
     # 包含路由
     app.include_router(api_routes, prefix="/api/v1")
+    app.include_router(auth_routes, prefix="/api/v1")
 
     # WebSocket端点
     @app.websocket("/ws")

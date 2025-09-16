@@ -102,10 +102,7 @@ python -m src.main interactive
 python -m src.main analyze AAPL --type comprehensive
 
 # 导出报告
-python -m src.main analyze AAPL --export html,pdf
-
-# 使用缓存
-python -m src.main analyze AAPL --use-cache
+python -m src.main analyze AAPL --format html,pdf
 
 # 自定义配置
 python -m src.main analyze AAPL --config custom_config.yaml
@@ -177,7 +174,7 @@ python -m src.main portfolio AAPL MSFT GOOG --weights AAPL=0.5,MSFT=0.3,GOOG=0.2
 
 #### 导出方法
 ```bash
-python -m src.main analyze AAPL --export html,pdf,json
+python -m src.main analyze AAPL --format html,pdf,json
 ```
 
 ## 6. 报告解读
@@ -262,7 +259,7 @@ A: 请访问各数据源官方网站申请API密钥，例如Yahoo Finance、Alph
 A: 目前支持美股、A股、港股等主要市场。
 
 **Q: 如何提高分析速度？**
-A: 您可以使用`--use-cache`参数来利用缓存数据，显著提高分析速度。
+A: 您可以确保Redis缓存服务正在运行，系统会自动利用缓存数据来显著提高分析速度。
 
 **Q: 分析结果的准确性如何？**
 A: 系统基于公开的财务数据和市场数据进行分析，结果仅供参考，不构成投资建议。
