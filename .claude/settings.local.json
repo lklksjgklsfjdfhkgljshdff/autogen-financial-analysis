@@ -4,7 +4,14 @@
       "Bash(cat:*)",
       "Bash(find:*)",
       "Bash(python:*)",
-      "Bash(sed:*)"
+      "Bash(sed:*)",
+      "Bash(dir \"E:\\autogen_learn\\student_autogen_system\")",
+      "Bash(dir:*)",
+      "Bash(copy:*)",
+      "Bash(pip install:*)",
+      "Bash(source:*)",
+      "Bash(/e/autogen_learn/env/Scripts/activate:*)",
+      "Bash(/e/autogen_learn/venv/Scripts/python.exe:*)"
     ],
     "deny": [],
     "ask": []
